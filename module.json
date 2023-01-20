@@ -1,0 +1,29 @@
+{
+    "id": "todo-list",
+    "title": "To Do List",
+    "description": "A simple module which adds a user specific to do list.",
+    "authors": [
+      {
+        "name": "Paul Mohr"
+      }
+    ],
+    "version": "1",
+    "compatibility": {
+        "minimum": 9,
+        "verified": 10,
+        "maximum": 10
+    },
+    "scripts": [
+        "scripts/todo-list.js"
+    ],
+    "languages": [
+        {
+            "lang": "en",
+            "name": "English",
+            "path": "languages/en.json"
+        }
+    ],
+    "styles": [
+        "styles/todo-list.css"
+    ]
+}
