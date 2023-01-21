@@ -20,8 +20,21 @@ class ToDoList {
     static TEMPLATES = {
         TODOLIST: `modules/${this.ID}/templates/todo-list.hbs`
     }
+    static SETTINGS = {
+        INJECT_BUTTON: 'inject-button'
+    }
 
     static initialize() {
+        game.settings.register(this.ID, this.SETTINGS.INJECT_BUTTON, {
+            name: `TODO-LIST.settings.${this.SETTINGS.INJECT_BUTTON}.Name`,
+            default: true,
+            type: Boolean,
+            scope: 'client',
+            config: true,
+            hint: `TODO-LIST.settings.${this.SETTINGS.INJECT_BUTTON}.Hint`,
+            onChange: () => ui.players.render(),
+        });
+
         this.toDoListConfig = new ToDoListConfig();
     }
 
@@ -152,6 +165,43 @@ class ToDoListConfig extends FormApplication {
 
         this.render();
     }
+
+    activateListeners(html) {
+        super.activateListeners(html);
+
+        html.on('click', "[data-action]", this._handleButtonClick.bind(this));
+    }
+
+    async _handleButtonClick(event) {
+        const clickedElement = $(event.currentTarget);
+        const action = clickedElement.data().action;
+        const toDoId = clickedElement.parents('[data-todo-id]')?.data()?.todoId;
+
+        switch(action) {
+            case 'create': {
+                await ToDoListData.createToDo(this.options.userId);
+                this.render();
+                break;
+            }
+            case 'delete': {
+                const confirmed = await Dialog.confirm({
+                    title: game.i18n.localize("TODO-LIST.confirms.deleteConfirm.Title"),
+                    content: game.i18n.localize("TODO-LIST.confirms.deleteConfirm.Content")
+                });
+
+                if( confirmed ) {
+                    await ToDoListData.deleteToDo(toDoId);
+                    this.render();
+                }
+                break;
+            }
+            default:{
+                ToDoList.log(false, 'Invalid action detected', action);
+            }
+        }
+
+        ToDoList.log(false, 'Button Clicked!', {action, toDoId});
+    }
 }
 
 /**
@@ -179,6 +229,11 @@ Hooks.on('renderPlayerList', (playerList, html) => {
     // create localized tooltip
     const tooltip = game.i18n.localize('TODO-LIST.button-title');
 
+    // Don't insert the button if we've set the config setting to suppress it
+    if (!game.settings.get(ToDoList.ID, ToDoList.SETTINGS.INJECT_BUTTON)) {
+        return;
+    }
+
     // Insert a button at the end of this element
     loggedInUserListItem.append(
         `<button type='button' class='todo-list-icon-button flex0' title='${tooltip}'><i class='fas fa-tasks'></i></button>`
@@ -192,6 +247,3 @@ Hooks.on('renderPlayerList', (playerList, html) => {
     });
 });
 
-/**
- * check this comment into pmdev
- */
